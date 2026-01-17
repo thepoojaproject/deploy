@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title> Deploy - Windows 98 Edition</title>
+  <title>Deploy - Windows 98 Edition</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -97,12 +97,37 @@
     #html-output { flex:1; width:100%; border:none; display:none; }
 
     .status-bar {
-      height:24px; background:#c0c0c0; border-top:1px solid #fff;
-      padding:0 8px; font-size:11px; display:flex; align-items:center; gap:24px;
+      height:24px; 
+      background:#c0c0c0; 
+      border-top:1px solid #fff;
+      padding:0 8px; 
+      font-size:11px; 
+      display:flex; 
+      align-items:center; 
+      justify-content: space-between;
+      gap:16px;
+      white-space: nowrap;
     }
-    .status-marquee { flex:1; overflow:hidden; white-space:nowrap; }
-    .marquee-inner { display:inline-block; animation:marquee 16s linear infinite; }
-    @keyframes marquee { 0% { transform:translateX(100%); } 100% { transform:translateX(-100%); } }
+    .status-left { flex-shrink: 0; }
+    .status-right {
+      font-style: italic;
+      color: #444;
+      opacity: 0.9;
+    }
+    .status-marquee { 
+      flex:1; 
+      overflow:hidden; 
+      white-space:nowrap; 
+      text-align: center;
+    }
+    .marquee-inner { 
+      display:inline-block; 
+      animation:marquee 20s linear infinite; 
+    }
+    @keyframes marquee { 
+      0% { transform:translateX(100%); } 
+      100% { transform:translateX(-100%); } 
+    }
 
     /* Dropdown */
     .dropdown-menu {
@@ -128,7 +153,7 @@
 
 <div class="window" id="win">
   <div class="title-bar" id="titleBar">
-    <div class="title">Code Runner - Windows 98 Edition</div>
+    <div class="title">Deploy - Windows 98 Edition</div>
     <div class="window-btn" onclick="alert('Minimized! (not really)')">_</div>
     <div class="window-btn" onclick="alert('Maximized!')">□</div>
     <div class="window-btn" onclick="forceClose()">×</div>
@@ -165,11 +190,10 @@
   <div class="main">
     <div class="editor-wrap">
       <div class="editor-gutter" id="gutter"></div>
-      <textarea id="code" spellcheck="false">// Welcome Pooja! ♡
+      <textarea id="code" spellcheck="false">// Welcome! ♡
 // Press Ctrl + Enter or F5 to run
 
-console.log("Hello from Windows 98!");
-alert("Code Runner by askbhimmondal-stack");</textarea>
+console.log("Hello from Windows 98!");</textarea>
     </div>
 
     <div class="output-wrap">
@@ -180,25 +204,32 @@ alert("Code Runner by askbhimmondal-stack");</textarea>
   </div>
 
   <div class="status-bar">
-    <div id="status">Ready</div>
-    <div class="status-marquee"><div class="marquee-inner">
-      Windows 98 Code Runner • Made with love for Pooja • GitHub: askbhimmondal-stack • Enjoy retro coding! ♡
-    </div></div>
+    <div class="status-left" id="status">Ready</div>
+    
+    <div class="status-marquee">
+      <div class="marquee-inner">
+        Pyodide • JavaScript • HTML • Ctrl+Enter or F5 to run • GitHub: askbhimmondal-stack
+      </div>
+    </div>
+    
+    <div class="status-right">
+      Made in ❤ for Pooja
+    </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
 
 <script>
-// Force close tab/window (works even on direct open)
+// Force close (works in most modern browsers when page is standalone)
 function forceClose() {
   window.open('', '_self').close();
   window.close();
-  // Final fallback
-  document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:40vh;font-family:Arial'>Goodbye Pooja! ♡</h1>";
+  // Fallback message if close is blocked
+  document.body.innerHTML = '<h1 style="color:white;text-align:center;margin-top:40vh;font-family:Arial">Goodbye! ♡ Pooja</h1>';
 }
 
-// Rest of the code (draggable, run, etc.) remains perfect
+// ────────────────────────────────────────────────
 const win = document.getElementById('win');
 const titleBar = document.getElementById('titleBar');
 const codeArea = document.getElementById('code');
@@ -211,7 +242,7 @@ const fileMenu = document.getElementById('fileMenu');
 
 let pyodide, pyReady = false;
 
-// Draggable
+// Draggable window
 let isDragging = false, startX, startY, initLeft, initTop;
 titleBar.onmousedown = e => {
   if (e.target.classList.contains('window-btn')) return;
@@ -222,7 +253,7 @@ titleBar.onmousedown = e => {
 document.onmousemove = e => {
   if (!isDragging) return;
   win.style.left = (initLeft + e.clientX - startX) + 'px';
-  win.style.top = (initTop + e.clientY - startY) + 'px';
+  win.style.top  = (initTop + e.clientY - startY) + 'px';
 };
 document.onmouseup = () => { isDragging = false; titleBar.style.cursor = 'default'; };
 
@@ -235,10 +266,10 @@ codeArea.addEventListener('input', updateGutter);
 codeArea.addEventListener('scroll', () => gutter.scrollTop = codeArea.scrollTop);
 updateGutter();
 
-// Language save
+// Language persistence
 if (localStorage.getItem('lastLang')) langSel.value = localStorage.getItem('lastLang');
 
-// Python
+// Python init
 async function initPyodide() {
   status.textContent = 'Loading Python...';
   pyodide = await loadPyodide();
@@ -252,8 +283,12 @@ async function runCode() {
   const lang = langSel.value;
   localStorage.setItem('lastLang', lang);
   const code = codeArea.value.trim();
-  output.textContent = ''; htmlFrame.style.display = 'none'; output.style.display = 'block';
-  output.style.color = '#0f0'; status.textContent = 'Running...';
+
+  output.textContent = '';
+  htmlFrame.style.display = 'none';
+  output.style.display = 'block';
+  output.style.color = '#0f0';
+  status.textContent = 'Running...';
 
   try {
     if (lang === 'javascript') {
@@ -263,7 +298,7 @@ async function runCode() {
       output.textContent = logs.join('\n') || '(no output)';
     }
     else if (lang === 'python') {
-      if (!pyReady) throw new Error("Python loading...");
+      if (!pyReady) throw new Error("Python still loading...");
       let out = "";
       pyodide.setStdout({batched: s => out += s});
       pyodide.setStderr({batched: s => out += s});
@@ -278,28 +313,30 @@ async function runCode() {
     status.textContent = 'Finished • ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   } catch (e) {
     output.style.color = '#f44';
-    output.textContent = e.message;
+    output.textContent = e.message + '\n' + (e.stack||'').split('\n').slice(0,6).join('\n');
     status.textContent = 'Error';
   }
 }
 
 function clearOutput() {
-  output.textContent = ''; htmlFrame.srcdoc = '';
-  htmlFrame.style.display = 'none'; output.style.display = 'block';
+  output.textContent = '';
+  htmlFrame.srcdoc = '';
+  htmlFrame.style.display = 'none';
+  output.style.display = 'block';
   status.textContent = 'Cleared';
 }
 
-// Dropdown menu
+// Dropdown
 function toggleFileMenu(e) {
   e.stopPropagation();
   const isOpen = fileMenu.style.display === 'block';
   fileMenu.style.display = isOpen ? 'none' : 'block';
   if (!isOpen) {
     setTimeout(() => {
-      document.addEventListener('click', function hide(ev) {
+      document.addEventListener('click', function handler(ev) {
         if (!fileMenu.contains(ev.target)) {
           fileMenu.style.display = 'none';
-          document.removeEventListener('click', hide);
+          document.removeEventListener('click', handler);
         }
       }, { once: true });
     }, 10);
